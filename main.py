@@ -39,10 +39,20 @@ print('✅ 認証情報を読み込みました。')
 # ================================================================
 
 # 取得する商品カテゴリ設定
-# DMM商品フロア: 'digital'(動画), 'mono'(通販), 'anime'(アニメ), 'book'(電子書籍) など
-DMM_FLOOR     = os.environ.get('DMM_FLOOR', 'digital')   # 投稿するフロア
+# floor指定値: videoa=一般動画, videoc=素人動画, anime=アニメ, doujin=同人, comic=電子書籍, goods=グッズ
+DMM_FLOOR     = os.environ.get('DMM_FLOOR', 'videoa')    # 投稿するフロア（デフォルト: 一般動画）
 DMM_HITS      = int(os.environ.get('DMM_HITS', '20'))    # 取得件数（最大100）
-DMM_SORT      = os.environ.get('DMM_SORT', '-date')      # ソート順: -date(新着), rank(人気), -price
+DMM_SORT      = os.environ.get('DMM_SORT', 'date')       # ソート順: date(新着), rank(人気), price(価格)
+
+# フロアごとのservice対応表（DMM APIの仕様に合わせた正しい組み合わせ）
+FLOOR_SERVICE_MAP = {
+    'videoa': ('digital', 'videoa'),         # 一般動画
+    'videoc': ('digital', 'videoc'),         # 素人動画
+    'anime':  ('digital', 'anime'),          # アニメ動画
+    'doujin': ('doujin',  'digital_doujin'), # 同人
+    'comic':  ('ebook',   'comic'),          # 電子書籍(漫画)
+    'goods':  ('mono',    'goods'),          # グッズ通販
+}
 
 POST_ALL      = os.environ.get('POST_ALL', 'false').lower() == 'true'
 POST_INDEX    = int(os.environ.get('POST_INDEX', '0'))
@@ -53,10 +63,12 @@ DMM_API_BASE  = 'https://api.dmm.com/affiliate/v3'
 
 # カテゴリ別ハッシュタグ
 HASHTAG_MAP = {
-    'digital': '#動画 #アダルト #DMM #PR #アフィリエイト #おすすめ #新着',
-    'mono':    '#通販 #グッズ #DMM #PR #アフィリエイト #おすすめ #新着',
-    'anime':   '#アニメ #同人 #DMM #PR #アフィリエイト #おすすめ #新着',
-    'book':    '#電子書籍 #漫画 #DMM #PR #アフィリエイト #おすすめ #新着',
+    'videoa': '#動画 #アダルト #FANZA #DMM #PR #アフィリエイト #おすすめ #新着',
+    'videoc': '#素人 #動画 #FANZA #DMM #PR #アフィリエイト #おすすめ #新着',
+    'anime':  '#アニメ #FANZA #DMM #PR #アフィリエイト #おすすめ #新着',
+    'doujin': '#同人 #FANZA #DMM #PR #アフィリエイト #おすすめ #新着',
+    'comic':  '#電子書籍 #漫画 #DMM #PR #アフィリエイト #おすすめ #新着',
+    'goods':  '#通販 #グッズ #DMM #PR #アフィリエイト #おすすめ #新着',
     'default': '#DMM #PR #アフィリエイト #おすすめ #新着',
 }
 
@@ -66,12 +78,13 @@ HASHTAG_MAP = {
 
 def fetch_dmm_products(floor=DMM_FLOOR, hits=DMM_HITS, sort=DMM_SORT):
     """DMMアフィリエイトAPIから商品一覧を取得"""
+    service, floor_name = FLOOR_SERVICE_MAP.get(floor, ('digital', floor))
     params = {
         'api_id':       DMM_API_ID,
         'affiliate_id': DMM_AFFILIATE_ID,
-        'site':         'FANZA',   # FANZA(アダルト) or DMM
-        'service':      'digital',
-        'floor':        floor,
+        'site':         'FANZA',
+        'service':      service,
+        'floor':        floor_name,
         'hits':         hits,
         'sort':         sort,
         'output':       'json',
