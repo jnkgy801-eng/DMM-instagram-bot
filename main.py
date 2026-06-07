@@ -40,18 +40,20 @@ print('✅ 認証情報を読み込みました。')
 
 # 取得する商品カテゴリ設定
 # floor指定値: videoa=一般動画, videoc=素人動画, anime=アニメ, doujin=同人, comic=電子書籍, goods=グッズ
-DMM_FLOOR     = os.environ.get('DMM_FLOOR', 'videoa')    # 投稿するフロア（デフォルト: 一般動画）
+DMM_FLOOR = os.environ.get('DMM_FLOOR', 'digital')   # ymlのデフォルトに合わせる
+DMM_SORT  = os.environ.get('DMM_SORT', '-date')       # 新着降順に統一
 DMM_HITS      = int(os.environ.get('DMM_HITS', '20'))    # 取得件数（最大100）
-DMM_SORT      = os.environ.get('DMM_SORT', 'date')       # ソート順: date(新着), rank(人気), price(価格)
+
 
 # フロアごとのservice対応表（DMM APIの仕様に合わせた正しい組み合わせ）
 FLOOR_SERVICE_MAP = {
-    'videoa': ('digital', 'videoa'),         # 一般動画
-    'videoc': ('digital', 'videoc'),         # 素人動画
-    'anime':  ('digital', 'anime'),          # アニメ動画
-    'doujin': ('doujin',  'digital_doujin'), # 同人
-    'comic':  ('ebook',   'comic'),          # 電子書籍(漫画)
-    'goods':  ('mono',    'goods'),          # グッズ通販
+    'videoa':  ('digital', 'videoa'),
+    'videoc':  ('digital', 'videoc'),
+    'anime':   ('digital', 'anime'),
+    'doujin':  ('doujin',  'digital_doujin'),
+    'comic':   ('ebook',   'comic'),
+    'goods':   ('mono',    'goods'),
+    'digital': ('digital', 'videoa'),   # ← これを追加（ymlのデフォルト対応）
 }
 
 POST_ALL      = os.environ.get('POST_ALL', 'false').lower() == 'true'
