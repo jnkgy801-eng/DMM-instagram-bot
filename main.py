@@ -94,7 +94,9 @@ def fetch_dmm_products(floor=DMM_FLOOR, hits=DMM_HITS, sort=DMM_SORT):
     try:
         resp = requests.get(f'{DMM_API_BASE}/ItemList', params=params, timeout=15)
         data = resp.json()
-        items = data.get('result', {}).get('items', {}).get('item', [])
+        items = data.get('result', {}).get('items', [])
+        if isinstance(items, dict):
+            items = items.get('item', [])
         print(f'  ✅ {len(items)} 件の商品を取得しました。')
         return items
     except Exception as e:
