@@ -118,7 +118,8 @@ def parse_product(item):
     if prices:
         price_val = prices.get('price') or prices.get('list_price') or ''
         if price_val:
-            price_str = f'¥{int(price_val):,}'
+            price_num = ''.join(c for c in str(price_val) if c.isdigit())
+            price_str = f'¥{int(price_num):,}' if price_num else ''
     # 出演者・ジャンル
     actors  = [a.get('name', '') for a in (item.get('iteminfo', {}).get('actress') or [])][:3]
     genres  = [g.get('name', '') for g in (item.get('iteminfo', {}).get('genre') or [])][:3]
