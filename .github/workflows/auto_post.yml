@@ -2,11 +2,8 @@ name: DMMアフィリエイト Instagram 自動投稿
 
 on:
   schedule:
-    # UTC時間で4時間ごとに実行
-    # 0時・4時・8時・12時・16時・20時（UTC）= 9時・13時・17時・21時・1時・5時（JST）
     - cron: '0 0,4,8,12,16,20 * * *'
 
-  # 手動実行ボタン（テスト用）
   workflow_dispatch:
     inputs:
       post_index:
@@ -18,9 +15,9 @@ on:
         required: false
         default: 'false'
       dmm_floor:
-        description: 'DMMフロア（digital / mono / anime / book）'
+        description: 'DMMフロア（videoa / videoc / anime / doujin / comic / goods）'
         required: false
-        default: 'digital'
+        default: 'videoa'
       dmm_sort:
         description: 'ソート順（-date / rank / -price）'
         required: false
@@ -44,6 +41,35 @@ jobs:
         run: |
           pip install requests pillow
 
+      - name: 🔍 DMM API デバッグ確認
+        env:
+          DMM_API_ID:       ${{ secrets.DMM_API_ID }}
+          DMM_AFFILIATE_ID: ${{ secrets.DMM_AFFILIATE_ID }}
+        run: |
+          python - <<'PYEOF'
+          import os, requests, json
+
+          api_id       = os.environ.get('DMM_API_ID', '')
+          affiliate_id = os.environ.get('DMM_AFFILIATE_ID', '')
+
+          print(f"API_ID末尾3文字: ...{api_id[-3:] if api_id else '★未設定★'}")
+          print(f"AFFILIATE_ID末尾6文字: ...{affiliate_id[-6:] if affiliate_id else '★未設定★'}")
+
+          params = {
+              'api_id':       api_id,
+              'affiliate_id': affiliate_id,
+              'site':         'FANZA',
+              'service':      'digital',
+              'floor':        'videoa',
+              'hits':         3,
+              'sort':         '-date',
+              'output':       'json',
+          }
+          resp = requests.get('https://api.dmm.com/affiliate/v3/ItemList', params=params, timeout=15)
+          print(f"HTTPステータス: {resp.status_code}")
+          print(json.dumps(resp.json(), ensure_ascii=False, indent=2)[:2000])
+          PYEOF
+
       - name: DMMアフィリエイト Instagram 自動投稿を実行
         env:
           META_ACCESS_TOKEN:    ${{ secrets.META_ACCESS_TOKEN }}
@@ -53,6 +79,6 @@ jobs:
           DMM_AFFILIATE_ID:     ${{ secrets.DMM_AFFILIATE_ID }}
           POST_INDEX:  ${{ github.event.inputs.post_index  || '0' }}
           POST_ALL:    ${{ github.event.inputs.post_all    || 'false' }}
-          DMM_FLOOR:   ${{ github.event.inputs.dmm_floor   || 'digital' }}
+          DMM_FLOOR:   ${{ github.event.inputs.dmm_floor   || 'videoa' }}
           DMM_SORT:    ${{ github.event.inputs.dmm_sort    || '-date' }}
         run: python main.py
